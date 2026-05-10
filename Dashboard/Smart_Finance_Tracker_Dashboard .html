@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Finance Tracker — BA Portfolio | Vaishnavi Jitendra Bhor</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1F2937}
+.header{background:#1E3A5F;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.header-title{font-size:16px;font-weight:600}
+.header-sub{font-size:12px;opacity:.75;margin-top:2px}
+.header-badge{background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;font-size:11px}
+.nav{display:flex;gap:2px;padding:0 24px;background:#fff;border-bottom:1px solid #E5E7EB;overflow-x:auto}
+.nav-btn{padding:12px 18px;font-size:13px;font-weight:500;border:none;background:transparent;color:#6B7280;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.nav-btn.active{color:#185FA5;border-bottom-color:#185FA5}
+.nav-btn:hover:not(.active){color:#1F2937;background:#F9FAFB}
+.page{display:none;padding:20px 24px;max-width:1400px;margin:0 auto}
+.page.active{display:block}
+.page-title{font-size:18px;font-weight:600;color:#1E3A5F;margin-bottom:3px}
+.page-sub{font-size:12px;color:#6B7280;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #E5E7EB}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px 16px;border-left:4px solid #ccc}
+.kpi.red{border-left-color:#E24B4A}.kpi.green{border-left-color:#639922}.kpi.amber{border-left-color:#BA7517}.kpi.blue{border-left-color:#185FA5}
+.kpi-label{font-size:11px;color:#6B7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.kpi-val{font-size:24px;font-weight:600;color:#1F2937;line-height:1}
+.kpi-target{font-size:11px;color:#9CA3AF;margin-top:4px}
+.kpi-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:5px}
+.s-red{background:#FEE2E2;color:#991B1B}.s-green{background:#DCFCE7;color:#166534}.s-amber{background:#FEF3C7;color:#92400E}.s-blue{background:#DBEAFE;color:#1E40AF}
+.chart-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.chart-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.chart-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.card{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px}
+.card-title{font-size:13px;font-weight:600;color:#1E3A5F;margin-bottom:2px}
+.card-sub{font-size:11px;color:#6B7280;margin-bottom:14px}
+.health-wrap{text-align:center;padding:12px 0}
+.gauge-num{font-size:48px;font-weight:700;color:#E24B4A;line-height:1}
+.gauge-of{font-size:16px;color:#6B7280}
+.gauge-label{font-size:13px;color:#374151;margin-top:4px;font-weight:500}
+.gauge-status{font-size:11px;font-weight:600;padding:4px 14px;border-radius:20px;display:inline-block;margin-top:8px;background:#FEE2E2;color:#991B1B}
+.progress-item{margin-bottom:10px}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:#374151;margin-bottom:3px}
+.progress-bar{height:7px;background:#F3F4F6;border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;border-radius:4px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#6B7280}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#F9FAFB;padding:9px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:1px solid #E5E7EB;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+td{padding:9px 12px;border-bottom:1px solid #F3F4F6;color:#1F2937}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#F9FAFB}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;display:inline-block}
+.b-red{background:#FEE2E2;color:#991B1B}.b-green{background:#DCFCE7;color:#166534}.b-amber{background:#FEF3C7;color:#92400E}
+.scenario-wrap{margin-top:2px}
+.slider-row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.slider-row label{font-size:12px;color:#374151;width:130px;flex-shrink:0}
+.slider-row input[type=range]{flex:1;accent-color:#185FA5}
+.slider-row span{font-size:12px;font-weight:600;color:#1E3A5F;width:70px;text-align:right;flex-shrink:0}
+.impact-box{background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid #BFDBFE;border-radius:10px;padding:16px;margin-top:14px;text-align:center}
+.impact-val{font-size:28px;font-weight:700;transition:color .3s}
+.impact-label{font-size:11px;color:#6B7280;margin-top:3px}
+.impact-rate{font-size:12px;font-weight:600;color:#374151;margin-top:4px}
+.impact-msg{font-size:11px;color:#6B7280;margin-top:6px;min-height:16px}
+.cluster-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pill{border-radius:8px;padding:8px 12px;font-size:11px}
+.insight-box{background:#EFF6FF;border-left:3px solid #185FA5;border-radius:0 8px 8px 0;padding:10px 12px;margin-top:12px;font-size:11px;color:#374151}
+.insight-box strong{color:#1E3A5F}
+footer{text-align:center;padding:20px;font-size:11px;color:#9CA3AF;border-top:1px solid #E5E7EB;background:#fff;margin-top:24px}
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .chart-row,.chart-row-3{grid-template-columns:1fr}
+  .chart-row-2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">Smart Personal Finance Tracker</div>
+    <div class="header-sub">Business Analyst Portfolio · Vaishnavi Jitendra Bhor · MSc Business Analytics, University of Manchester</div>
+  </div>
+  <div class="header-badge">5 Years · 1,500 Transactions · 3 ML Models</div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('p1',this)">📊 Executive Summary</button>
+  <button class="nav-btn" onclick="showPage('p2',this)">🗂 Category Analysis</button>
+  <button class="nav-btn" onclick="showPage('p3',this)">🔍 Behaviour & ML Insights</button>
+  <button class="nav-btn" onclick="showPage('p4',this)">📈 Forecast & Scenarios</button>
+</div>
+
+<!-- PAGE 1 -->
+<div id="p1" class="page active">
+  <div class="page-title">Financial Health Dashboard</div>
+  <div class="page-sub">Jan 2020 – Dec 2024 · 60 months · Central question: why does an individual earning $883K end up $195K in deficit?</div>
+  <div class="kpi-grid">
+    <div class="kpi red"><div class="kpi-label">Avg Savings Rate</div><div class="kpi-val">-71.7%</div><div class="kpi-target">Target ≥ 20%</div><span class="kpi-status s-red">🔴 Critical</span></div>
+    <div class="kpi red"><div class="kpi-label">Budget Adherence</div><div class="kpi-val">8.5%</div><div class="kpi-target">Target ≥ 80%</div><span class="kpi-status s-red">🔴 Critical</span></div>
+    <div class="kpi red"><div class="kpi-label">Expense-to-Income</div><div class="kpi-val">171.7%</div><div class="kpi-target">Target &lt; 80%</div><span class="kpi-status s-red">🔴 Critical</span></div>
+    <div class="kpi green"><div class="kpi-label">Savings Velocity</div><div class="kpi-val">+63pp</div><div class="kpi-target">Trajectory improving</div><span class="kpi-status s-green">🟢 Improving</span></div>
+  </div>
+  <div class="chart-row">
+    <div class="card">
+      <div class="card-title">Monthly Income vs Expenses (2020–2024)</div>
+      <div class="card-sub">60 months — income grew faster than expenses in 3 of 4 years; deficit narrowing</div>
+      <div class="legend">
+        <span class="leg-item"><span class="leg-dot" style="background:#185FA5"></span>Income</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#E24B4A"></span>Expenses</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#BA7517"></span>3M Avg Expense</span>
+      </div>
+      <div style="position:relative;height:240px"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Financial Health Score</div>
+      <div class="card-sub">Composite of 12 weighted KPIs</div>
+      <div class="health-wrap">
+        <div class="gauge-num">26<span class="gauge-of">/100</span></div>
+        <div class="gauge-label">Financial Health Score</div>
+        <div class="gauge-status">Critical — immediate action needed</div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="progress-item"><div class="progress-label"><span>Savings Rate</span><span style="color:#E24B4A">0/25</span></div><div class="progress-bar"><div class="progress-fill" style="width:0%;background:#E24B4A"></div></div></div>
+        <div class="progress-item"><div class="progress-label"><span>Budget Adherence</span><span style="color:#E24B4A">0/20</span></div><div class="progress-bar"><div class="progress-fill" style="width:0%;background:#E24B4A"></div></div></div>
+        <div class="progress-item"><div class="progress-label"><span>Income Diversification</span><span style="color:#639922">20/20</span></div><div class="progress-bar"><div class="progress-fill" style="width:100%;background:#639922"></div></div></div>
+        <div class="progress-item"><div class="progress-label"><span>Expense-to-Income</span><span style="color:#E24B4A">0/20</span></div><div class="progress-bar"><div class="progress-fill" style="width:0%;background:#E24B4A"></div></div></div>
+        <div class="progress-item"><div class="progress-label"><span>50/30/20 Compliance</span><span style="color:#BA7517">6/15</span></div><div class="progress-bar"><div class="progress-fill" style="width:40%;background:#BA7517"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="chart-row-2">
+    <div class="card">
+      <div class="card-title">Monthly Savings Rate</div>
+      <div class="card-sub">Green ≥ 20% | Amber 0–20% | Red &lt; 0% — 40 of 60 months in deficit</div>
+      <div style="position:relative;height:185px"><canvas id="c2"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cumulative Net Financial Position</div>
+      <div class="card-sub">Running total of income − expenses over 5 years</div>
+      <div style="position:relative;height:185px"><canvas id="c3"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Year-on-Year Performance Summary</div>
+    <div class="card-sub">Annual deficit is closing — from −$102K in 2020 to −$5K in 2024</div>
+    <table>
+      <tr><th>Year</th><th>Total Income</th><th>Total Expenses</th><th>Net Position</th><th>Income Growth</th><th>Expense Growth</th><th>Deficit Months</th><th>Trend</th></tr>
+      <tr><td>2020</td><td>$127,742</td><td>$230,297</td><td style="color:#E24B4A;font-weight:600">−$102,555</td><td>—</td><td>—</td><td>11</td><td><span class="badge b-red">Baseline</span></td></tr>
+      <tr><td>2021</td><td>$174,685</td><td>$194,358</td><td style="color:#E24B4A;font-weight:600">−$19,673</td><td style="color:#639922">+36.7%</td><td style="color:#639922">−15.6%</td><td>7</td><td><span class="badge b-green">↑ Recovering</span></td></tr>
+      <tr><td>2022</td><td>$183,741</td><td>$220,762</td><td style="color:#E24B4A;font-weight:600">−$37,021</td><td style="color:#639922">+5.2%</td><td style="color:#E24B4A">+13.6%</td><td>9</td><td><span class="badge b-amber">↓ Setback</span></td></tr>
+      <tr><td>2023</td><td>$187,355</td><td>$217,741</td><td style="color:#E24B4A;font-weight:600">−$30,386</td><td style="color:#639922">+2.0%</td><td style="color:#639922">−1.4%</td><td>8</td><td><span class="badge b-green">↑ Improving</span></td></tr>
+      <tr><td style="font-weight:600">2024</td><td style="font-weight:600">$209,618</td><td style="font-weight:600">$214,984</td><td style="color:#E24B4A;font-weight:700">−$5,366</td><td style="color:#639922;font-weight:600">+11.9%</td><td style="color:#639922;font-weight:600">−1.3%</td><td style="font-weight:600">5</td><td><span class="badge b-green">↑ Near Breakeven</span></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div id="p2" class="page">
+  <div class="page-title">Category Deep Dive</div>
+  <div class="page-sub">All 7 expense categories exceed their industry-benchmark budgets — problem is systemic, not isolated</div>
+  <div class="kpi-grid">
+    <div class="kpi red"><div class="kpi-label">Over-Budget Categories</div><div class="kpi-val">7 of 7</div><div class="kpi-target">All categories breach budget</div><span class="kpi-status s-red">Systemic</span></div>
+    <div class="kpi red"><div class="kpi-label">Worst Utilisation</div><div class="kpi-val">807%</div><div class="kpi-target">Health &amp; Fitness vs $300 budget</div><span class="kpi-status s-red">Critical</span></div>
+    <div class="kpi red"><div class="kpi-label">Discretionary Ratio</div><div class="kpi-val">52.6%</div><div class="kpi-target">Target ≤ 30% of income</div><span class="kpi-status s-red">Excessive</span></div>
+    <div class="kpi amber"><div class="kpi-label">Total 5yr Overspend</div><div class="kpi-val">$195K</div><div class="kpi-target">Income − Expenses deficit</div><span class="kpi-status s-amber">Monitor</span></div>
+  </div>
+  <div class="chart-row">
+    <div class="card">
+      <div class="card-title">Budget Utilisation by Category (%)</div>
+      <div class="card-sub">100% = exactly on budget. Red = over budget. All categories are in the red.</div>
+      <div style="position:relative;height:290px"><canvas id="c4"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">5-Year Spending Distribution</div>
+      <div class="card-sub">% of total $1,078,141 in expenses</div>
+      <div style="position:relative;height:230px"><canvas id="c5"></canvas></div>
+      <div class="legend" style="margin-top:10px;justify-content:center">
+        <span class="leg-item"><span class="leg-dot" style="background:#185FA5"></span>Travel 15.7%</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#639922"></span>Rent 15.0%</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#E24B4A"></span>Food 14.8%</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#BA7517"></span>Entertainment 13.7%</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#534AB7"></span>Shopping 13.6%</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#0F6E56"></span>Utilities 13.6%</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#993556"></span>Health 13.5%</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Full Category Scorecard</div>
+    <div class="card-sub">Sorted by overspend severity (Budget Utilisation %) — CV% = coefficient of variation (spending volatility)</div>
+    <table>
+      <tr><th>Category</th><th>5yr Total</th><th>Avg/Month</th><th>Budget</th><th>Monthly Variance</th><th>Utilisation</th><th>Txn Count</th><th>Avg Txn</th><th>CV%</th><th>Status</th></tr>
+      <tr><td>Health &amp; Fitness</td><td>$145,194</td><td>$2,420</td><td>$300</td><td style="color:#E24B4A;font-weight:600">+$2,120</td><td style="color:#E24B4A;font-weight:600">807%</td><td>152</td><td>$955</td><td>62%</td><td><span class="badge b-red">Critical</span></td></tr>
+      <tr><td>Utilities</td><td>$146,834</td><td>$2,447</td><td>$350</td><td style="color:#E24B4A;font-weight:600">+$2,097</td><td style="color:#E24B4A;font-weight:600">699%</td><td>157</td><td>$935</td><td>62%</td><td><span class="badge b-red">Critical</span></td></tr>
+      <tr><td>Entertainment</td><td>$148,165</td><td>$2,469</td><td>$400</td><td style="color:#E24B4A;font-weight:600">+$2,069</td><td style="color:#E24B4A;font-weight:600">617%</td><td>143</td><td>$1,036</td><td>54%</td><td><span class="badge b-red">Critical</span></td></tr>
+      <tr><td>Travel</td><td>$169,498</td><td>$2,825</td><td>$500</td><td style="color:#E24B4A;font-weight:600">+$2,325</td><td style="color:#E24B4A;font-weight:600">565%</td><td>160</td><td>$1,059</td><td>52%</td><td><span class="badge b-red">Critical</span></td></tr>
+      <tr><td>Shopping</td><td>$146,881</td><td>$2,448</td><td>$600</td><td style="color:#E24B4A;font-weight:600">+$1,848</td><td style="color:#E24B4A;font-weight:600">408%</td><td>150</td><td>$979</td><td>56%</td><td><span class="badge b-red">Critical</span></td></tr>
+      <tr><td>Food &amp; Drink</td><td>$159,493</td><td>$2,658</td><td>$800</td><td style="color:#E24B4A;font-weight:600">+$1,858</td><td style="color:#E24B4A;font-weight:600">332%</td><td>149</td><td>$1,070</td><td>56%</td><td><span class="badge b-red">Critical</span></td></tr>
+      <tr><td>Rent</td><td>$162,075</td><td>$2,701</td><td>$1,200</td><td style="color:#E24B4A;font-weight:600">+$1,501</td><td style="color:#BA7517;font-weight:600">225%</td><td>165</td><td>$982</td><td>56%</td><td><span class="badge b-amber">Over</span></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 3 -->
+<div id="p3" class="page">
+  <div class="page-title">Behaviour Analytics &amp; ML Insights</div>
+  <div class="page-sub">50/30/20 rule compliance · Isolation Forest anomaly detection (54 flagged) · K-Means cluster profiles</div>
+  <div class="chart-row-3">
+    <div class="card">
+      <div class="card-title">50% Rule — Needs Spending</div>
+      <div class="card-sub">Only 17% of months compliant</div>
+      <div style="position:relative;height:155px"><canvas id="c6"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">30% Rule — Wants Spending</div>
+      <div class="card-sub">Only 18% of months compliant</div>
+      <div style="position:relative;height:155px"><canvas id="c7"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">20% Rule — Investment/Savings</div>
+      <div class="card-sub">87% of months compliant ✓</div>
+      <div style="position:relative;height:155px"><canvas id="c8"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-row-2">
+    <div class="card">
+      <div class="card-title">Income Structure by Source</div>
+      <div class="card-sub">HHI = 0.374 — moderately diversified. Salary only 17% of income.</div>
+      <div style="position:relative;height:210px"><canvas id="c9"></canvas></div>
+      <div class="insight-box"><strong>Key finding:</strong> Investment income (41%) + Other (42%) provide strong diversification. This is a financial strength. Growing investment contributions is the highest-ROI strategic action.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Seasonal &amp; Temporal Patterns</div>
+      <div class="card-sub">Average spend by season — Summer peaks, Friday is top spending day</div>
+      <div style="position:relative;height:165px"><canvas id="c10"></canvas></div>
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:8px">K-Means Cluster Profile (ML Model 3) — 60 months</div>
+        <div class="cluster-pills">
+          <div class="pill" style="background:#FEF3C7;border:1px solid #FCD34D"><strong style="color:#92400E">Borderline months</strong><br><span style="color:#B45309;font-size:11px">42 of 60 months (70%) — near deficit, recoverable</span></div>
+          <div class="pill" style="background:#FEE2E2;border:1px solid #FCA5A5"><strong style="color:#991B1B">Deficit months</strong><br><span style="color:#B91C1C;font-size:11px">18 of 60 months (30%) — structural overspend</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">ML Model 2 — Isolation Forest Anomaly Detection</div>
+    <div class="card-sub">8-feature multi-dimensional detection · 54 transactions flagged ($33,338) · 5% contamination rate · PCA explains 61.9% variance</div>
+    <div class="chart-row-2" style="margin-bottom:0;margin-top:10px">
+      <div style="position:relative;height:175px"><canvas id="c11"></canvas></div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#374151;margin-bottom:10px">Severity Breakdown (54 transactions)</div>
+        <div class="progress-item"><div class="progress-label"><span>Critical (8 txns) — Immediate review</span><span style="color:#E24B4A">$4,200</span></div><div class="progress-bar"><div class="progress-fill" style="width:15%;background:#E24B4A"></div></div></div>
+        <div class="progress-item"><div class="progress-label"><span>High (14 txns) — Review this week</span><span style="color:#BA7517">$12,800</span></div><div class="progress-bar"><div class="progress-fill" style="width:30%;background:#BA7517"></div></div></div>
+        <div class="progress-item"><div class="progress-label"><span>Medium (32 txns) — Monitor</span><span style="color:#185FA5">$16,338</span></div><div class="progress-bar"><div class="progress-fill" style="width:55%;background:#185FA5"></div></div></div>
+        <div class="insight-box" style="margin-top:10px"><strong>Why Isolation Forest over Z-score:</strong> Z-score is univariate — it only checks amount. Isolation Forest uses 8 features simultaneously (amount, timing, category encoding, deviation from mean, percentile rank). A transaction can have a normal amount but be anomalous in timing or context — that's what this model catches.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4 -->
+<div id="p4" class="page">
+  <div class="page-title">12-Month Forecast &amp; What-If Scenarios</div>
+  <div class="page-sub">ML Model 1: Holt Exponential Smoothing + Bootstrap CI · 85.1% accuracy · Breakeven projected Jan 2025</div>
+  <div class="kpi-grid">
+    <div class="kpi green"><div class="kpi-label">Breakeven Month</div><div class="kpi-val">Jan 2025</div><div class="kpi-target">At current trajectory</div><span class="kpi-status s-green">Projected</span></div>
+    <div class="kpi blue"><div class="kpi-label">Model Accuracy</div><div class="kpi-val">85.1%</div><div class="kpi-target">MAPE: 14.9%</div><span class="kpi-status s-blue">Acceptable</span></div>
+    <div class="kpi amber"><div class="kpi-label">Organic Improvement</div><div class="kpi-val">+$127/mo</div><div class="kpi-target">Linear trend rate</div><span class="kpi-status s-amber">Too slow</span></div>
+    <div class="kpi green"><div class="kpi-label">Annual Deficit Trend</div><div class="kpi-val">−95%</div><div class="kpi-target">2020: −$102K → 2024: −$5K</div><span class="kpi-status s-green">Improving</span></div>
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">12-Month Expense &amp; Income Forecast (2025)</div>
+    <div class="card-sub">Historical solid lines + projected dashed lines with 80% confidence band — income projected to exceed expenses from Jan 2025</div>
+    <div class="legend">
+      <span class="leg-item"><span class="leg-dot" style="background:#639922"></span>Income (historical)</span>
+      <span class="leg-item"><span class="leg-dot" style="background:#E24B4A"></span>Expenses (historical)</span>
+      <span class="leg-item"><span class="leg-dot" style="background:#639922;opacity:.5"></span>Income forecast</span>
+      <span class="leg-item"><span class="leg-dot" style="background:#E24B4A;opacity:.5"></span>Expense forecast</span>
+    </div>
+    <div style="position:relative;height:240px"><canvas id="c12"></canvas></div>
+  </div>
+  <div class="chart-row-2">
+    <div class="card">
+      <div class="card-title">What-If Scenario Modelling</div>
+      <div class="card-sub">Drag the sliders to model intervention impact on monthly net savings</div>
+      <div class="scenario-wrap">
+        <div class="slider-row"><label>Cut Wants spending by</label><input type="range" id="sl1" min="0" max="50" value="0" step="5" oninput="updateScenario()"><span id="sv1">0%</span></div>
+        <div class="slider-row"><label>Grow monthly income by</label><input type="range" id="sl2" min="0" max="30" value="0" step="5" oninput="updateScenario()"><span id="sv2">0%</span></div>
+        <div class="slider-row"><label>Automate savings of</label><input type="range" id="sl3" min="0" max="2000" value="0" step="100" oninput="updateScenario()"><span id="sv3">$0/mo</span></div>
+        <div class="impact-box">
+          <div class="impact-label">Projected monthly net savings</div>
+          <div class="impact-val" id="impact-val" style="color:#E24B4A">−$3,250/month</div>
+          <div class="impact-rate" id="impact-rate">Savings rate: −22.1%</div>
+          <div class="impact-msg" id="impact-msg">Adjust sliders above to model different interventions</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">90-Day Intervention Priority Plan</div>
+      <div class="card-sub">Ranked by annual impact · Combined impact: −$3,250 → +$1,800/month</div>
+      <table>
+        <tr><th>Priority</th><th>Action</th><th>Type</th><th>Annual Impact</th></tr>
+        <tr><td><span class="badge b-green">P1 — Week 1</span></td><td>Automate $500/mo savings</td><td style="color:#6B7280">Quick win</td><td style="color:#166534;font-weight:600">+$6,000</td></tr>
+        <tr><td><span class="badge b-green">P2 — Week 2</span></td><td>Full subscription audit</td><td style="color:#6B7280">Quick win</td><td style="color:#166534;font-weight:600">+$11,800</td></tr>
+        <tr><td><span class="badge b-amber">P3 — Month 1</span></td><td>Hard cap top 3 categories</td><td style="color:#6B7280">Structural</td><td style="color:#166534;font-weight:600">+$8,500</td></tr>
+        <tr><td><span class="badge b-amber">P4 — Month 2</span></td><td>+$300/mo to investments</td><td style="color:#6B7280">Strategic</td><td style="color:#166534;font-weight:600">+$2,520</td></tr>
+        <tr><td>P5 — Ongoing</td><td>Monthly 30-min review</td><td style="color:#6B7280">Monitoring</td><td style="color:#6B7280">Sustains all gains</td></tr>
+      </table>
+      <div class="insight-box" style="margin-top:10px">
+        <strong>Projected outcome:</strong> Financial Health Score 26/100 → 60–75/100 within 12 months. Annual savings potential: $14,400–$21,600.
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Smart Personal Finance Tracker · Business Analyst Portfolio Project · Vaishnavi Jitendra Bhor<br>
+  MSc Business Analytics, University of Manchester · Tools: Python · scikit-learn · openpyxl · Chart.js · Power BI<br>
+  Dataset: <a href="https://www.kaggle.com/datasets/ramyapintchy/personal-finance-data?select=Personal_Finance_Dataset.csv" style="color:#9CA3AF;">Kaggle Personal Finance Dataset</a> · 1,500 transactions · Jan 2020 – Dec 2024<br>
+  <a href="https://www.linkedin.com/in/vaishnavi-bhor-business-analyst/" style="color:#9CA3AF;">linkedin.com/in/vaishnavi-bhor-business-analyst</a> · vaishnavibhor123@gmail.com
+</footer>
+
+<script>
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+const months60=['Jan-20','Feb-20','Mar-20','Apr-20','May-20','Jun-20','Jul-20','Aug-20','Sep-20','Oct-20','Nov-20','Dec-20','Jan-21','Feb-21','Mar-21','Apr-21','May-21','Jun-21','Jul-21','Aug-21','Sep-21','Oct-21','Nov-21','Dec-21','Jan-22','Feb-22','Mar-22','Apr-22','May-22','Jun-22','Jul-22','Aug-22','Sep-22','Oct-22','Nov-22','Dec-22','Jan-23','Feb-23','Mar-23','Apr-23','May-23','Jun-23','Jul-23','Aug-23','Sep-23','Oct-23','Nov-23','Dec-23','Jan-24','Feb-24','Mar-24','Apr-24','May-24','Jun-24','Jul-24','Aug-24','Sep-24','Oct-24','Nov-24','Dec-24'];
+const inc=[8904,10642,12162,7493,8035,11076,13899,10424,8470,12162,11727,12748,11828,14349,12991,6205,9889,16288,17645,17063,10858,18808,14155,24606,13004,15385,17033,11356,14836,17033,15751,18132,12088,18865,15385,14872,13226,16579,14344,8755,13785,17511,19187,18069,12295,21236,16393,15976,14575,17698,19260,13187,16831,19260,17698,20474,13707,23598,18219,15111];
+const exp=[17995,19229,16407,19582,17465,20641,22229,19053,15701,21523,20994,19478,13111,15703,14331,19981,14178,17380,18752,17685,12044,19972,15550,15671,15277,18202,20477,14139,17714,20640,19015,22265,14139,22590,18202,18103,15497,19331,16775,11183,16296,20290,22047,21089,14698,24284,18533,17716,14981,18191,19930,13643,17254,19796,18191,20866,14044,24076,18592,15421];
+const net=inc.map((v,i)=>v-exp[i]);
+const cum=net.reduce((a,v,i)=>{a.push((a[i-1]||0)+v);return a;},[]);
+const sr=inc.map((v,i)=>Math.round((v-exp[i])/v*100));
+function rollingMean(arr,n){return arr.map((_,i)=>i<n-1?null:Math.round(arr.slice(i-n+1,i+1).reduce((a,b)=>a+b,0)/n));}
+const exp3m=rollingMean(exp,3);
+
+new Chart(document.getElementById('c1'),{type:'line',data:{labels:months60,datasets:[{label:'Income',data:inc,borderColor:'#185FA5',backgroundColor:'rgba(24,95,165,.06)',tension:.35,borderWidth:2,pointRadius:0,fill:true},{label:'Expenses',data:exp,borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,.06)',tension:.35,borderWidth:2,pointRadius:0,fill:true},{label:'3M Avg Expense',data:exp3m,borderColor:'#BA7517',borderWidth:1.5,borderDash:[4,3],tension:.35,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},maxTicksLimit:12}},y:{ticks:{callback:v=>'$'+Math.round(v/1000)+'K',font:{size:9}}}}}});
+
+new Chart(document.getElementById('c2'),{type:'bar',data:{labels:months60,datasets:[{data:sr,backgroundColor:sr.map(v=>v>=20?'#639922':v>=0?'#BA7517':'#E24B4A'),borderRadius:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8},maxTicksLimit:10}},y:{ticks:{callback:v=>v+'%',font:{size:9}}}}}});
+
+new Chart(document.getElementById('c3'),{type:'line',data:{labels:months60,datasets:[{label:'Cumulative Net',data:cum,borderColor:'#1E3A5F',backgroundColor:'rgba(226,75,74,.12)',tension:.35,borderWidth:2.2,pointRadius:0,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},maxTicksLimit:10}},y:{ticks:{callback:v=>'$'+Math.round(v/1000)+'K',font:{size:9}}}}}});
+
+new Chart(document.getElementById('c4'),{type:'bar',data:{labels:['Health & Fitness','Utilities','Entertainment','Travel','Shopping','Food & Drink','Rent'],datasets:[{data:[807,699,617,565,408,332,225],backgroundColor:['#E24B4A','#E24B4A','#E24B4A','#E24B4A','#BA7517','#BA7517','#BA7517'],borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+'% of budget'}}},scales:{x:{ticks:{callback:v=>v+'%',font:{size:10}},max:900,grid:{color:'#F3F4F6'}},y:{ticks:{font:{size:11}}}}}});
+
+new Chart(document.getElementById('c5'),{type:'doughnut',data:{labels:['Travel','Rent','Food','Entertainment','Shopping','Utilities','Health & Fitness'],datasets:[{data:[15.7,15.0,14.8,13.7,13.6,13.6,13.5],backgroundColor:['#185FA5','#639922','#E24B4A','#BA7517','#534AB7','#0F6E56','#993556'],borderWidth:3,borderColor:'#fff',hoverBorderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{display:false}}}});
+
+function miniBar(id,data,goodFn){
+  const s=data.filter((_,i)=>i%3===0);
+  new Chart(document.getElementById(id),{type:'bar',data:{labels:s.map((_,i)=>i===0?'2020':i===4?'2021':i===8?'2022':i===12?'2023':i===16?'2024':''),datasets:[{data:s,backgroundColor:s.map(v=>goodFn(v)?'#639922':'#E24B4A'),borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}},max:Math.max(...s)*1.2}}}});
+}
+const np=[180,190,165,220,175,200,215,185,155,210,205,195,145,175,160,240,170,195,210,200,135,220,175,180,160,190,215,150,185,215,200,235,150,240,190,190,165,205,180,125,175,215,235,225,155,260,200,190,190,230,255,175,220,250,230,265,180,305,235,200];
+const wp=[150,155,135,165,145,170,185,160,130,180,175,160,125,150,140,195,135,165,180,170,115,190,150,150,135,160,185,130,160,185,170,200,130,210,160,160,140,175,155,110,150,185,200,190,135,220,170,165,165,195,215,150,190,215,195,225,155,260,200,170];
+const sp=[30,35,40,20,25,40,55,35,25,45,40,42,50,60,55,25,40,70,75,70,45,80,60,95,55,65,75,50,65,75,70,80,55,85,65,65,55,70,60,38,58,75,82,75,52,90,70,68,65,80,85,60,75,85,80,90,60,105,80,67];
+miniBar('c6',np,v=>v<=50);
+miniBar('c7',wp,v=>v<=30);
+miniBar('c8',sp,v=>v>=20);
+
+new Chart(document.getElementById('c9'),{type:'bar',data:{labels:['2020','2021','2022','2023','2024'],datasets:[{label:'Salary',data:[29808,34937,36748,37471,41936],backgroundColor:'#185FA5',stack:'s'},{label:'Investment',data:[50800,72650,72630,72790,94382],backgroundColor:'#639922',stack:'s'},{label:'Other',data:[47134,67098,74363,77094,73300],backgroundColor:'#0F6E56',stack:'s'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:10,padding:8}}},scales:{x:{ticks:{font:{size:10}},stacked:true},y:{ticks:{callback:v=>'$'+Math.round(v/1000)+'K',font:{size:9}},stacked:true}}}});
+
+new Chart(document.getElementById('c10'),{type:'bar',data:{labels:['Winter','Spring','Summer','Autumn'],datasets:[{data:[1019,979,1048,959],backgroundColor:['#185FA5','#639922','#E24B4A','#BA7517'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{callback:v=>'$'+v,font:{size:9}},min:900}}}});
+
+new Chart(document.getElementById('c11'),{type:'bar',data:{labels:['Utilities','Health & F.','Entertainment','Travel','Shopping','Food','Rent'],datasets:[{label:'Anomalies',data:[19,11,10,5,4,4,1],backgroundColor:['#E24B4A','#E24B4A','#E24B4A','#BA7517','#BA7517','#BA7517','#185FA5'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}},title:{display:true,text:'Flagged transactions',font:{size:10}}}}}});
+
+const hL=months60.filter((_,i)=>i%3===0);
+const fL=['Jan-25','Feb-25','Mar-25','Apr-25','May-25','Jun-25','Jul-25','Aug-25','Sep-25','Oct-25','Nov-25','Dec-25'];
+const aL=[...hL,...fL];
+const hI=inc.filter((_,i)=>i%3===0), hE=exp.filter((_,i)=>i%3===0);
+const fI=[18298,23199,12858,13751,15242,16134,14438,18321,18659,18813,14505,15200];
+const fE=[14568,14071,12955,14391,14301,15102,12331,9598,11879,13200,12800,13500];
+const fElo=fE.map(v=>v*0.85), fEhi=fE.map(v=>v*1.15);
+new Chart(document.getElementById('c12'),{type:'line',data:{labels:aL,datasets:[{label:'Income (hist)',data:[...hI,...new Array(12).fill(null)],borderColor:'#185FA5',borderWidth:2.2,tension:.3,pointRadius:0,fill:false},{label:'Expense (hist)',data:[...hE,...new Array(12).fill(null)],borderColor:'#E24B4A',borderWidth:2.2,tension:.3,pointRadius:0,fill:false},{label:'Inc forecast',data:[...new Array(20).fill(null),...fI],borderColor:'#185FA5',borderWidth:2,borderDash:[6,3],tension:.3,pointRadius:3,pointBackgroundColor:'#185FA5',fill:false},{label:'Exp forecast',data:[...new Array(20).fill(null),...fE],borderColor:'#E24B4A',borderWidth:2,borderDash:[6,3],tension:.3,pointRadius:3,pointBackgroundColor:'#E24B4A',fill:false},{label:'Exp CI hi',data:[...new Array(20).fill(null),...fEhi],borderColor:'rgba(226,75,74,.25)',borderWidth:0,fill:'+1',backgroundColor:'rgba(226,75,74,.08)',pointRadius:0},{label:'Exp CI lo',data:[...new Array(20).fill(null),...fElo],borderColor:'rgba(226,75,74,.25)',borderWidth:0,fill:false,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},maxRotation:45,maxTicksLimit:16}},y:{ticks:{callback:v=>'$'+Math.round(v/1000)+'K',font:{size:9}}}}}});
+
+function updateScenario(){
+  const cut=parseInt(document.getElementById('sl1').value)/100;
+  const grow=parseInt(document.getElementById('sl2').value)/100;
+  const auto=parseInt(document.getElementById('sl3').value);
+  document.getElementById('sv1').textContent=Math.round(cut*100)+'%';
+  document.getElementById('sv2').textContent='+'+Math.round(grow*100)+'%';
+  document.getElementById('sv3').textContent='$'+auto+'/mo';
+  const BASE_INC=14719, BASE_NET=-3250, BASE_WANTS=7482;
+  const newInc=BASE_INC*(1+grow);
+  const saving=BASE_WANTS*cut+(newInc-BASE_INC);
+  const newNet=BASE_NET+saving;
+  const sr2=Math.round(newNet/newInc*100);
+  const iv=document.getElementById('impact-val');
+  const fmt=v=>(v<0?'−$':'$')+Math.abs(Math.round(v)).toLocaleString()+'/month';
+  iv.textContent=fmt(newNet);
+  iv.style.color=newNet>=0?'#166534':'#991B1B';
+  document.getElementById('impact-rate').textContent='Projected savings rate: '+sr2+'%';
+  const msgs=['Adjust sliders to model different interventions','Getting closer — keep adjusting the levers','Good progress — approaching breakeven','Breakeven achieved! Savings rate is positive','Approaching 20% savings target — excellent progress!','20%+ savings rate reached — financial health restored!'];
+  const idx=Math.min(5,Math.max(0,Math.floor((newNet+3250)/1100)));
+  document.getElementById('impact-msg').textContent=msgs[idx];
+}
+</script>
+</body>
+</html>
